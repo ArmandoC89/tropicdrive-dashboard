@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TropicDrive — Business Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#053E93;--navy-mid:#0a4fa8;--navy-dark:#021e4a;
+  --card:rgba(10,60,140,0.42);--yellow:#fce05e;--yglow:rgba(252,224,94,0.15);
+  --white:#fff;--muted:rgba(255,255,255,0.52);--faint:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.09);--red:#ff5263;--green:#1fd680;--purple:#9b84f7;--blue:#4fc3f7;
+  --r:13px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Mono',monospace;background:var(--navy-dark);color:#fff;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 5% 0%,rgba(252,224,94,0.055) 0%,transparent 55%),radial-gradient(ellipse 50% 70% at 95% 100%,rgba(5,62,147,0.65) 0%,transparent 60%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.016) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.016) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+
+/* HEADER */
+header{position:fixed;top:0;left:0;right:0;z-index:300;height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;background:rgba(2,18,52,0.94);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.3px}
+.lmark{width:28px;height:28px;background:var(--yellow);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.live{display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;background:rgba(31,214,128,0.1);border:1px solid rgba(31,214,128,0.22);color:var(--green)}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.synctxt{font-size:10px;color:var(--muted)}
+.rbtn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--faint);color:var(--muted);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.rbtn:hover{background:var(--yglow);color:var(--yellow);border-color:rgba(252,224,94,.3)}
+.rbtn:disabled{opacity:.5;cursor:not-allowed}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* NAV */
+nav{position:fixed;top:58px;left:0;right:0;z-index:290;display:flex;background:rgba(2,18,52,0.9);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 26px;overflow-x:auto}
+nav::-webkit-scrollbar{display:none}
+.nb{padding:11px 16px;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:none;white-space:nowrap;letter-spacing:.9px;text-transform:uppercase;border-bottom:2px solid transparent;transition:all .18s}
+.nb:hover{color:#fff}
+.nb.active{color:var(--yellow);border-bottom-color:var(--yellow)}
+
+/* DATE BAR */
+.dbar{position:fixed;top:106px;left:0;right:0;z-index:280;display:flex;align-items:center;gap:7px;padding:8px 26px;background:rgba(3,25,68,0.88);border-bottom:1px solid var(--border);overflow-x:auto}
+.dbar::-webkit-scrollbar{display:none}
+.pb{padding:4px 12px;border-radius:20px;font-size:10px;border:1px solid var(--border);background:var(--faint);color:var(--muted);cursor:pointer;white-space:nowrap;font-family:'DM Mono',monospace;letter-spacing:.5px;transition:all .16s}
+.pb:hover{color:#fff;border-color:rgba(255,255,255,.18)}
+.pb.active{background:var(--yglow);border-color:rgba(252,224,94,.38);color:var(--yellow)}
+.dsep{width:1px;height:16px;background:var(--border);flex-shrink:0}
+.crange{display:flex;align-items:center;gap:5px}
+.di{padding:3px 9px;border-radius:7px;border:1px solid var(--border);background:var(--faint);color:#fff;font-family:'DM Mono',monospace;font-size:10px;outline:none;cursor:pointer}
+.di:focus{border-color:rgba(252,224,94,.4);background:var(--yglow)}
+.abtn{padding:3px 11px;border-radius:7px;border:none;background:var(--yellow);color:var(--navy-dark);font-family:'DM Mono',monospace;font-size:10px;font-weight:700;cursor:pointer}
+.abtn:hover{opacity:.85}
+.dinfo{font-size:9px;color:var(--muted);margin-left:auto;white-space:nowrap;flex-shrink:0}
+
+/* MAIN */
+main{position:relative;z-index:1;padding:160px 26px 48px;max-width:1440px;margin:0 auto}
+.tp{display:none;animation:fu .25s ease}
+.tp.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* PAGE HEADER */
+.phdr{margin-bottom:20px}
+.ptitle{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-1px;margin-bottom:2px}
+.ptitle .y{color:var(--yellow)}
+.psub{font-size:10px;color:var(--muted);letter-spacing:.6px}
+
+/* ALERT */
+.alert{display:flex;align-items:flex-start;gap:9px;background:rgba(252,224,94,0.065);border:1px solid rgba(252,224,94,.16);border-radius:9px;padding:10px 14px;font-size:10px;color:rgba(252,224,94,.72);margin-bottom:18px;line-height:1.65}
+
+/* KPI ROW */
+.krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:13px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px 18px;position:relative;overflow:hidden;transition:transform .18s,border-color .18s;backdrop-filter:blur(12px)}
+.kpi:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.16)}
+.kpi.hi{border-color:rgba(252,224,94,.32);background:rgba(252,224,94,.08)}
+.kpi.hi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--yellow),transparent)}
+.kico{position:absolute;top:16px;right:16px;font-size:17px;opacity:.22}
+.klbl{font-size:9px;color:var(--muted);letter-spacing:1.6px;text-transform:uppercase;margin-bottom:9px}
+.kval{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1.1;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi.hi .kval{color:var(--yellow)}
+.ksub{font-size:10px;display:flex;align-items:center;gap:3px}
+.up{color:var(--green)}.dn{color:var(--red)}.nt{color:var(--muted)}
+
+/* METER */
+.mtr{margin-top:12px}
+.mtr-lbls{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:5px}
+.mtr-t{height:4px;background:var(--faint);border-radius:2px;overflow:hidden}
+.mtr-f{height:100%;background:linear-gradient(90deg,var(--yellow),#ffad3b);border-radius:2px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+
+/* GRIDS */
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:18px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.g31{display:grid;grid-template-columns:3fr 1fr;gap:14px;margin-bottom:18px}
+.g13{display:grid;grid-template-columns:1fr 3fr;gap:14px;margin-bottom:18px}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;backdrop-filter:blur(12px)}
+.card.mb{margin-bottom:18px}
+.ctitle{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:2px;letter-spacing:-.2px}
+.csub{font-size:9px;color:var(--muted);letter-spacing:.9px;text-transform:uppercase;margin-bottom:16px}
+.cw{position:relative;height:200px}
+.cw.md{height:250px}
+.cw.sm{height:160px}
+.cw.lg{height:300px}
+
+/* DONUT */
+.dw{position:relative;height:190px;display:flex;align-items:center;justify-content:center}
+.dc{position:absolute;text-align:center;pointer-events:none}
+.dc .dcv{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--yellow)}
+.dc .dcl{font-size:9px;color:var(--muted);letter-spacing:.8px}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{text-align:left;padding:8px 12px;font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;cursor:pointer;user-select:none;white-space:nowrap}
+.tbl th:hover{color:var(--yellow)}
+.tbl th.sort-asc::after{content:' ▲';color:var(--yellow);font-size:8px}
+.tbl th.sort-desc::after{content:' ▼';color:var(--yellow);font-size:8px}
+.tbl td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-family:'DM Mono',monospace}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--faint)}
+.pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:600;letter-spacing:.4px}
+.pill.g{background:rgba(31,214,128,.12);color:var(--green)}
+.pill.y{background:rgba(252,224,94,.12);color:var(--yellow)}
+.pill.r{background:rgba(255,82,99,.12);color:var(--red)}
+.pill.p{background:rgba(155,132,247,.12);color:var(--purple)}
+.pill.b{background:rgba(79,195,247,.12);color:var(--blue)}
+
+/* BAR ROWS */
+.blist{display:flex;flex-direction:column;gap:9px;margin-top:4px}
+.brow{display:flex;align-items:center;gap:9px;font-size:10px}
+.blbl{width:110px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+.btrack{flex:1;height:4px;background:var(--faint);border-radius:2px;overflow:hidden}
+.bfill{height:100%;border-radius:2px;transition:width 1s ease}
+.bpct{width:40px;text-align:right;color:var(--muted);font-size:9px;flex-shrink:0}
+
+/* STAT PAIR */
+.sp{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--faint)}
+.sp:last-child{border-bottom:none}
+.spl{font-size:10px;color:var(--muted)}
+.spv{font-size:11px}
+
+/* LOADER / EMPTY */
+.ldr{display:flex;align-items:center;justify-content:center;height:160px;gap:9px;color:var(--muted);font-size:10px}
+.spin{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--yellow);border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:160px;gap:7px;color:var(--muted)}
+.empty .ei{font-size:26px;opacity:.35}
+.empty .et{font-size:10px;letter-spacing:.4px}
+
+/* COMING SOON */
+.cs{background:var(--faint);border:1px dashed var(--border);border-radius:var(--r);padding:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-align:center;margin-bottom:18px}
+.csi{font-size:28px;opacity:.45}
+.cst{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--muted)}
+.csd{font-size:10px;color:var(--muted);max-width:400px;line-height:1.75;opacity:.7}
+
+/* MoM DELTA */
+.delta{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 6px;border-radius:4px}
+.delta.pos{background:rgba(31,214,128,.1);color:var(--green)}
+.delta.neg{background:rgba(255,82,99,.1);color:var(--red)}
+.delta.neu{background:var(--faint);color:var(--muted)}
+
+/* GROWTH TABLE SPECIAL */
+.gtbl td.hi{color:var(--yellow);font-weight:600}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .g21,.g31,.g13{grid-template-columns:1fr}
+  .g2,.g3{grid-template-columns:1fr}
+  main{padding:154px 14px 48px}
+  header,nav,.dbar{padding-left:14px;padding-right:14px}
+  .krow{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><div class="lmark">🚗</div>TropicDrive</div>
+  <div class="hdr-r">
+    <span class="synctxt" id="syncTxt">—</span>
+    <div class="live"><div class="ldot"></div>LIVE</div>
+    <button id="refreshBtn" class="rbtn" onclick="loadAll(true)" title="Refresh all data">↻</button>
+  </div>
+</header>
+
+<nav>
+  <button class="nb active"  onclick="showTab('cmd',this)">⚡ Command</button>
+  <button class="nb" onclick="showTab('rev',this)">💳 Revenue</button>
+  <button class="nb" onclick="showTab('ads',this)">📣 Ads</button>
+  <button class="nb" onclick="showTab('campaigns',this)">🎯 Campaigns</button>
+  <button class="nb" onclick="showTab('analytics',this)">📊 Analytics</button>
+  <button class="nb" onclick="showTab('growth',this)">📈 Growth</button>
+  <button class="nb" onclick="showTab('setup',this)">⚙️ Setup</button>
+</nav>
+
+<div class="dbar">
+  <button class="pb" onclick="setPeriod('today',this)">Today</button>
+  <button class="pb active" onclick="setPeriod('yesterday',this)">Yesterday</button>
+  <button class="pb" onclick="setPeriod('7d',this)">7 Days</button>
+  <button class="pb" onclick="setPeriod('14d',this)">14 Days</button>
+  <button class="pb" onclick="setPeriod('30d',this)">30 Days</button>
+  <button class="pb" onclick="setPeriod('all',this)">All Time</button>
+  <div class="dsep"></div>
+  <div class="crange">
+    <input type="date" class="di" id="df">
+    <span style="color:var(--muted);font-size:10px">→</span>
+    <input type="date" class="di" id="dt">
+    <button class="abtn" onclick="applyCustom()">Apply</button>
+  </div>
+  <span class="dinfo" id="dinfo">—</span>
+</div>
+
+<main>
+
+<!-- ══════════════════ COMMAND CENTER ══════════════════ -->
+<div class="tp active" id="tab-cmd">
+  <div class="phdr"><div class="ptitle">Command <span class="y">Center</span></div><div class="psub">REAL-TIME PROFIT & PERFORMANCE — ALL AMOUNTS IN USD</div></div>
+  <div class="alert">⚠️ Ads conversions can be delayed 48h. Stripe revenue is always the ground truth for profitability.</div>
+  <div class="krow" id="cmd-kpis"><div class="ldr" style="grid-column:1/-1"><div class="spin"></div>Loading...</div></div>
+  <div class="g21">
+    <div class="card">
+      <div class="ctitle">Revenue vs Ad Spend</div><div class="csub">GROSS REVENUE vs GOOGLE ADS SPEND (USD)</div>
+      <div class="cw md"><canvas id="c-rv-sp"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Daily Profit</div><div class="csub">NET AFTER AD SPEND</div>
+      <div class="cw md"><canvas id="c-profit"></canvas></div>
+    </div>
+  </div>
+  <div class="card mb">
+    <div class="ctitle">Summary Table</div><div class="csub">SELECTED PERIOD — NEWEST FIRST</div>
+    <div style="overflow-x:auto;margin-top:4px">
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Gross Rev.</th><th>Ad Spend</th><th>Profit</th><th>Margin</th><th>Bookings</th><th>Avg. Value</th><th>ROAS</th></tr></thead>
+        <tbody id="cmd-tbl"><tr><td colspan="8" class="ldr" style="height:60px"><div class="spin"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ REVENUE ══════════════════ -->
+<div class="tp" id="tab-rev">
+  <div class="phdr"><div class="ptitle">Revenue <span class="y">Analytics</span></div><div class="psub">STRIPE PAYMENTS — LIVE EXCHANGE RATE CONVERSION TO USD</div></div>
+  <div class="krow" id="rev-kpis"><div class="ldr" style="grid-column:1/-1"><div class="spin"></div>Loading...</div></div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">Gross Revenue</div><div class="csub">DAILY (USD)</div><div class="cw md"><canvas id="c-gross"></canvas></div></div>
+    <div class="card"><div class="ctitle">Net Revenue</div><div class="csub">AFTER STRIPE FEES (2.9% + $0.30)</div><div class="cw md"><canvas id="c-net"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">Daily Bookings</div><div class="csub">RESERVATION COUNT</div><div class="cw"><canvas id="c-bkgs"></canvas></div></div>
+    <div class="card"><div class="ctitle">Avg. Booking Value</div><div class="csub">AOV PER DAY (USD)</div><div class="cw"><canvas id="c-aov"></canvas></div></div>
+  </div>
+  <div class="card mb">
+    <div class="ctitle">Stripe Daily Detail</div><div class="csub">RAW DATA</div>
+    <div style="overflow-x:auto;margin-top:4px">
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Gross</th><th>Net</th><th>Bookings</th><th>Avg. Value</th><th>Refunds</th><th>Stripe Fees Est.</th></tr></thead>
+        <tbody id="rev-tbl"><tr><td colspan="7" class="ldr" style="height:50px"><div class="spin"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ ADS ══════════════════ -->
+<div class="tp" id="tab-ads">
+  <div class="phdr"><div class="ptitle">Ads <span class="y">Overview</span></div><div class="psub">GOOGLE ADS TOTALS — CONVERSIONS MAY BE DELAYED 48H</div></div>
+  <div class="alert">⚠️ Conversion tracking is impacted by cookie blockers (~30–40% under-counted). Use Stripe bookings as the real conversion number.</div>
+  <div class="krow" id="ads-kpis"><div class="ldr" style="grid-column:1/-1"><div class="spin"></div>Loading...</div></div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">Ad Spend Trend</div><div class="csub">DAILY SPEND (USD)</div><div class="cw md"><canvas id="c-spend"></canvas></div></div>
+    <div class="card"><div class="ctitle">ROAS Trend</div><div class="csub">REVENUE ÷ SPEND</div><div class="cw md"><canvas id="c-roas"></canvas></div></div>
+  </div>
+  <div class="g3">
+    <div class="card"><div class="ctitle">Daily Clicks</div><div class="csub">VOLUME</div><div class="cw sm"><canvas id="c-clicks"></canvas></div></div>
+    <div class="card"><div class="ctitle">CTR</div><div class="csub">CLICK-THROUGH RATE</div><div class="cw sm"><canvas id="c-ctr"></canvas></div></div>
+    <div class="card"><div class="ctitle">Avg. CPC</div><div class="csub">COST PER CLICK (USD)</div><div class="cw sm"><canvas id="c-cpc"></canvas></div></div>
+  </div>
+  <div class="card mb">
+    <div class="ctitle">Google Ads Daily</div><div class="csub">RAW DATA</div>
+    <div style="overflow-x:auto;margin-top:4px">
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Spend</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>CPC</th><th>Conv.</th><th>ROAS</th></tr></thead>
+        <tbody id="ads-tbl"><tr><td colspan="8" class="ldr" style="height:50px"><div class="spin"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ CAMPAIGNS ══════════════════ -->
+<div class="tp" id="tab-campaigns">
+  <div class="phdr"><div class="ptitle">Campaign <span class="y">Analysis</span></div><div class="psub">GOOGLE ADS — CAMPAIGN & KEYWORD BREAKDOWN</div></div>
+  <div id="camp-connected" style="display:none">
+    <div class="krow" id="camp-kpis"></div>
+    <div class="g2">
+      <div class="card mb">
+        <div class="ctitle">Campaign Performance</div><div class="csub">SPEND, CLICKS & ROAS PER CAMPAIGN</div>
+        <div class="cw md"><canvas id="c-camp-spend"></canvas></div>
+      </div>
+      <div class="card mb">
+        <div class="ctitle">Campaign ROAS</div><div class="csub">RETURN ON AD SPEND PER CAMPAIGN</div>
+        <div class="cw md"><canvas id="c-camp-roas"></canvas></div>
+      </div>
+    </div>
+    <div class="card mb">
+      <div class="ctitle">Campaign Detail</div><div class="csub">ALL CAMPAIGNS — SELECTED PERIOD</div>
+      <div style="overflow-x:auto;margin-top:4px">
+        <table class="tbl">
+          <thead><tr><th>Campaign</th><th>Spend</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>CPC</th><th>Conv.</th><th>Status</th></tr></thead>
+          <tbody id="camp-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card mb">
+      <div class="ctitle">Top Keywords</div><div class="csub">BY SPEND — SELECTED PERIOD</div>
+      <div style="overflow-x:auto;margin-top:4px">
+        <table class="tbl">
+          <thead><tr><th>Keyword</th><th>Match Type</th><th>Campaign</th><th>Spend</th><th>Clicks</th><th>CPC</th><th>Conv.</th><th>Quality</th></tr></thead>
+          <tbody id="kw-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div id="camp-not-connected">
+    <div class="alert">📣 Campaign & keyword data requires the updated Google Ads Script. See the Setup tab for the script to paste.</div>
+    <div class="cs">
+      <div class="csi">🎯</div>
+      <div class="cst">Campaign Analysis — Script Not Yet Running</div>
+      <div class="csd">Once the updated Google Ads Script is installed, this tab will show per-campaign spend, ROAS, CTR, CPC, and a full keyword breakdown with match types and quality scores. Go to the <strong style="color:var(--yellow)">Setup tab</strong> to get the script.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ ANALYTICS ══════════════════ -->
+<div class="tp" id="tab-analytics">
+  <div class="phdr"><div class="ptitle">Analytics <span class="y">& Audience</span></div><div class="psub">GOOGLE ANALYTICS 4 — SESSIONS, DEMOGRAPHICS, DEVICES, SOURCES</div></div>
+  <div id="ga4-connected" style="display:none">
+    <div class="krow" id="ga4-kpis"></div>
+    <div class="g2">
+      <div class="card"><div class="ctitle">Sessions & Users</div><div class="csub">DAILY TRAFFIC</div><div class="cw md"><canvas id="c-sess"></canvas></div></div>
+      <div class="card"><div class="ctitle">Bounce Rate</div><div class="csub">% SINGLE-PAGE SESSIONS</div><div class="cw md"><canvas id="c-bounce"></canvas></div></div>
+    </div>
+    <div class="g3">
+      <div class="card">
+        <div class="ctitle">Top Countries</div><div class="csub">BY SESSIONS</div>
+        <div id="ga4-countries" class="blist" style="margin-top:6px"></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Devices</div><div class="csub">MOBILE / DESKTOP / TABLET</div>
+        <div class="dw"><canvas id="c-devices"></canvas><div class="dc"><div class="dcv" id="dev-total">—</div><div class="dcl">SESSIONS</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Traffic Sources</div><div class="csub">BY CHANNEL</div>
+        <div id="ga4-sources" class="blist" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <!-- Top Vehicles -->
+    <div class="g2" id="vehicles-section" style="display:none">
+      <div class="card mb">
+        <div class="ctitle">🚗 Top Vehicles</div><div class="csub">MOST BOOKED — BY RESERVATIONS</div>
+        <div id="veh-bars" class="blist" style="margin-top:8px"></div>
+      </div>
+      <div class="card mb">
+        <div class="ctitle">🚗 Vehicle Revenue</div><div class="csub">REVENUE PER MODEL (USD)</div>
+        <div class="cw md"><canvas id="c-veh-rev"></canvas></div>
+      </div>
+    </div>
+    <div class="card mb" id="vehicles-table-section" style="display:none">
+      <div class="ctitle">Vehicle Booking Detail</div><div class="csub">ALL MODELS — SELECTED PERIOD</div>
+      <div style="overflow-x:auto;margin-top:4px">
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Vehicle</th><th>Bookings</th><th>Revenue (USD)</th><th>Avg. per Booking</th><th>Share</th></tr></thead>
+          <tbody id="veh-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div id="ga4-not-connected">
+    <div class="alert">📊 GA4 not yet connected. Follow the steps in the Setup tab to add the Apps Script and create the ga4_daily sheet tab.</div>
+    <div class="cs">
+      <div class="csi">📊</div>
+      <div class="cst">Google Analytics 4 — Not Connected</div>
+      <div class="csd">Once connected, this tab shows: daily sessions & users, bounce rate, avg session duration, top countries, device breakdown (mobile/desktop/tablet), and traffic sources (Organic, Paid, Direct, Social, Email). All filtered by your date picker.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ GROWTH ══════════════════ -->
+<div class="tp" id="tab-growth">
+  <div class="phdr"><div class="ptitle">Growth <span class="y">& Trends</span></div><div class="psub">MONTH-OVER-MONTH PERFORMANCE — REQUIRES monthly_summary TAB IN SHEET</div></div>
+  <div id="growth-connected" style="display:none">
+    <div class="krow" id="growth-kpis"></div>
+    <div class="g2">
+      <div class="card"><div class="ctitle">Monthly Revenue</div><div class="csub">GROSS REVENUE PER MONTH (USD)</div><div class="cw md"><canvas id="c-mrev"></canvas></div></div>
+      <div class="card"><div class="ctitle">Monthly Bookings</div><div class="csub">RESERVATION COUNT PER MONTH</div><div class="cw md"><canvas id="c-mbk"></canvas></div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="ctitle">Monthly ROAS</div><div class="csub">AVG RETURN ON AD SPEND</div><div class="cw"><canvas id="c-mroas"></canvas></div></div>
+      <div class="card"><div class="ctitle">Monthly Profit</div><div class="csub">NET AFTER AD SPEND</div><div class="cw"><canvas id="c-mprofit"></canvas></div></div>
+    </div>
+    <div class="card mb">
+      <div class="ctitle">Month-over-Month Comparison</div><div class="csub">ALL MONTHS</div>
+      <div style="overflow-x:auto;margin-top:4px">
+        <table class="tbl gtbl">
+          <thead><tr><th>Month</th><th>Revenue</th><th>vs Prev.</th><th>Ad Spend</th><th>Profit</th><th>Margin</th><th>Bookings</th><th>ROAS</th></tr></thead>
+          <tbody id="growth-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div id="growth-not-connected">
+    <div class="alert">📈 Monthly growth data requires a <strong>monthly_summary</strong> tab in your Google Sheet. See the Setup tab for the exact formulas to paste.</div>
+    <div class="cs">
+      <div class="csi">📈</div>
+      <div class="cst">Growth Analytics — Sheet Tab Missing</div>
+      <div class="csd">Once you add the monthly_summary tab with the provided formulas, this section will show month-over-month revenue growth, booking trends, ROAS evolution, and profit margins — automatically calculated from your existing Stripe and Ads data.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ SETUP ══════════════════ -->
+<div class="tp" id="tab-setup">
+  <div class="phdr"><div class="ptitle">Setup <span class="y">Guide</span></div><div class="psub">SCRIPTS & FORMULAS TO COMPLETE YOUR DATA PIPELINE</div></div>
+
+  <!-- Step 1: Ads Script -->
+  <div class="card mb">
+    <div class="ctitle">① Updated Google Ads Script — Campaigns + Keywords</div>
+    <div class="csub">REPLACE YOUR EXISTING SCRIPT IN GOOGLE ADS → TOOLS → SCRIPTS</div>
+    <div style="margin-top:4px;font-size:10px;color:var(--muted);line-height:1.8;margin-bottom:12px">
+      This replaces your current script. It writes to 3 tabs: <span style="color:var(--yellow)">ads_spend</span> (totals, same as before) + <span style="color:var(--yellow)">ads_campaigns</span> (per-campaign) + <span style="color:var(--yellow)">ads_keywords</span> (top keywords by spend).
+    </div>
+    <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:16px;overflow-x:auto">
+<pre style="font-size:10px;line-height:1.75;color:rgba(252,224,94,0.82);white-space:pre-wrap">// ══════════════════════════════════════════
+// TropicDrive — Google Ads → Sheets (Full)
+// Tabs: ads_spend | ads_campaigns | ads_keywords
+// ══════════════════════════════════════════
+
+var SPREADSHEET_URL = "YOUR_SPREADSHEET_URL_HERE";
+
+function main() {
+  var ss        = SpreadsheetApp.openByUrl(SPREADSHEET_URL);
+  var shSpend   = ss.getSheetByName("ads_spend")     || ss.insertSheet("ads_spend");
+  var shCamp    = ss.getSheetByName("ads_campaigns") || ss.insertSheet("ads_campaigns");
+  var shKw      = ss.getSheetByName("ads_keywords")  || ss.insertSheet("ads_keywords");
+
+  var yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  var d = Utilities.formatDate(yesterday, "UTC", "yyyy-MM-dd");
+
+  // ── Ensure headers ──────────────────────
+  if (shSpend.getLastRow() === 0)
+    shSpend.appendRow(["date","spend_usd","clicks","impressions","conversions","currency"]);
+  if (shCamp.getLastRow() === 0)
+    shCamp.appendRow(["date","campaign","spend_usd","clicks","impressions","ctr","avg_cpc","conversions","status"]);
+  if (shKw.getLastRow() === 0)
+    shKw.appendRow(["date","keyword","match_type","campaign","spend_usd","clicks","impressions","avg_cpc","conversions","quality_score"]);
+
+  // ── Exchange rate: EUR → USD ─────────────
+  var ratesResp = UrlFetchApp.fetch("https://api.exchangerate-api.com/v4/latest/USD");
+  var eurToUsd  = 1 / JSON.parse(ratesResp.getContentText()).rates["EUR"];
+
+  // ── 1. TOTALS (ads_spend) ────────────────
+  var totalReport = AdsApp.report(
+    "SELECT metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions " +
+    "FROM campaign WHERE segments.date = '" + d + "'"
+  );
+  var totCost=0, totClicks=0, totImps=0, totConv=0;
+  var rows = totalReport.rows();
+  while (rows.hasNext()) {
+    var r = rows.next();
+    totCost   += parseInt(r["metrics.cost_micros"]) / 1e6;
+    totClicks += parseInt(r["metrics.clicks"]);
+    totImps   += parseInt(r["metrics.impressions"]);
+    totConv   += parseFloat(r["metrics.conversions"]);
+  }
+  shSpend.appendRow([d, (totCost*eurToUsd).toFixed(2), totClicks, totImps, totConv.toFixed(2), "USD"]);
+
+  // ── 2. CAMPAIGNS (ads_campaigns) ─────────
+  var campReport = AdsApp.report(
+    "SELECT campaign.name, campaign.status, " +
+    "metrics.cost_micros, metrics.clicks, metrics.impressions, " +
+    "metrics.ctr, metrics.average_cpc, metrics.conversions " +
+    "FROM campaign WHERE segments.date = '" + d + "'"
+  );
+  var campRows = campReport.rows();
+  while (campRows.hasNext()) {
+    var cr   = campRows.next();
+    var cost = parseInt(cr["metrics.cost_micros"]) / 1e6;
+    var cpc  = parseInt(cr["metrics.average_cpc"]) / 1e6;
+    shCamp.appendRow([
+      d,
+      cr["campaign.name"],
+      (cost * eurToUsd).toFixed(2),
+      parseInt(cr["metrics.clicks"]),
+      parseInt(cr["metrics.impressions"]),
+      parseFloat(cr["metrics.ctr"]).toFixed(4),
+      (cpc  * eurToUsd).toFixed(2),
+      parseFloat(cr["metrics.conversions"]).toFixed(2),
+      cr["campaign.status"]
+    ]);
+  }
+
+  // ── 3. KEYWORDS (ads_keywords, top 50 by spend) ──
+  var kwReport = AdsApp.report(
+    "SELECT ad_group_criterion.keyword.text, " +
+    "ad_group_criterion.keyword.match_type, " +
+    "campaign.name, " +
+    "metrics.cost_micros, metrics.clicks, metrics.impressions, " +
+    "metrics.average_cpc, metrics.conversions, " +
+    "ad_group_criterion.quality_info.quality_score " +
+    "FROM keyword_view " +
+    "WHERE segments.date = '" + d + "' " +
+    "AND metrics.cost_micros > 0 " +
+    "ORDER BY metrics.cost_micros DESC " +
+    "LIMIT 50"
+  );
+  var kwRows = kwReport.rows();
+  while (kwRows.hasNext()) {
+    var kw  = kwRows.next();
+    var kc  = parseInt(kw["metrics.cost_micros"]) / 1e6;
+    var kcp = parseInt(kw["metrics.average_cpc"]) / 1e6;
+    shKw.appendRow([
+      d,
+      kw["ad_group_criterion.keyword.text"],
+      kw["ad_group_criterion.keyword.match_type"],
+      kw["campaign.name"],
+      (kc  * eurToUsd).toFixed(2),
+      parseInt(kw["metrics.clicks"]),
+      parseInt(kw["metrics.impressions"]),
+      (kcp * eurToUsd).toFixed(2),
+      parseFloat(kw["metrics.conversions"]).toFixed(2),
+      kw["ad_group_criterion.quality_info.quality_score"] || "—"
+    ]);
+  }
+
+  Logger.log("Done: " + d + " | Total spend USD: " + (totCost*eurToUsd).toFixed(2));
+}</pre>
+    </div>
+    <div style="margin-top:10px;font-size:10px;color:var(--muted);line-height:1.8">
+      <strong style="color:var(--yellow)">New sheet tabs needed:</strong> ads_campaigns &nbsp;|&nbsp; ads_keywords<br>
+      <strong style="color:var(--yellow)">Headers ads_campaigns:</strong> date | campaign | spend_usd | clicks | impressions | ctr | avg_cpc | conversions | status<br>
+      <strong style="color:var(--yellow)">Headers ads_keywords:</strong> date | keyword | match_type | campaign | spend_usd | clicks | impressions | avg_cpc | conversions | quality_score
+    </div>
+  </div>
+
+  <!-- Step 2: GA4 Script -->
+  <div class="card mb">
+    <div class="ctitle">② GA4 Apps Script — Traffic & Audience</div>
+    <div class="csub">PASTE AT script.google.com — SET DAILY TRIGGER AT 07:30</div>
+    <div style="margin-top:4px;font-size:10px;color:var(--muted);line-height:1.8;margin-bottom:12px">
+      Creates & fills the <span style="color:var(--yellow)">ga4_daily</span> tab with: sessions, users, new users, bounce rate, avg duration, top countries, device split, traffic sources.
+    </div>
+    <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:16px;overflow-x:auto">
+<pre style="font-size:10px;line-height:1.75;color:rgba(252,224,94,0.82);white-space:pre-wrap">// ══════════════════════════════════════════
+// TropicDrive — GA4 → Sheets
+// Requires: Google Analytics Data API enabled
+//           in your Apps Script project
+// ══════════════════════════════════════════
+
+var GA4_PROPERTY  = "YOUR_GA4_PROPERTY_ID"; // numbers only, e.g. 123456789
+var SHEET_URL     = "YOUR_SPREADSHEET_URL";
+var TAB_NAME      = "ga4_daily";
+
+function runGA4Daily() {
+  var ss    = SpreadsheetApp.openByUrl(SHEET_URL);
+  var sheet = ss.getSheetByName(TAB_NAME) || ss.insertSheet(TAB_NAME);
+
+  if (sheet.getLastRow() === 0)
+    sheet.appendRow(["date","sessions","users","new_users","bounce_rate",
+                     "avg_duration","countries","devices","sources"]);
+
+  var yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  var d = Utilities.formatDate(yesterday, "UTC", "yyyy-MM-dd");
+
+  var prop = "properties/" + GA4_PROPERTY;
+
+  // Core metrics
+  var core = AnalyticsData.Properties.runReport(prop, {
+    dateRanges: [{startDate: d, endDate: d}],
+    metrics: [
+      {name:"sessions"},{name:"activeUsers"},
+      {name:"newUsers"},{name:"bounceRate"},
+      {name:"averageSessionDuration"}
+    ]
+  });
+  var m = core.rows ? core.rows[0].metricValues : null;
+  if (!m) { Logger.log("No GA4 data for " + d); return; }
+
+  // Countries (top 5)
+  var geo = AnalyticsData.Properties.runReport(prop, {
+    dateRanges: [{startDate: d, endDate: d}],
+    metrics: [{name:"sessions"}],
+    dimensions: [{name:"country"}],
+    orderBys: [{metric:{metricName:"sessions"},desc:true}],
+    limit: 5
+  });
+
+  // Devices
+  var dev = AnalyticsData.Properties.runReport(prop, {
+    dateRanges: [{startDate: d, endDate: d}],
+    metrics: [{name:"sessions"}],
+    dimensions: [{name:"deviceCategory"}]
+  });
+
+  // Traffic sources
+  var src = AnalyticsData.Properties.runReport(prop, {
+    dateRanges: [{startDate: d, endDate: d}],
+    metrics: [{name:"sessions"}],
+    dimensions: [{name:"sessionDefaultChannelGroup"}],
+    orderBys: [{metric:{metricName:"sessions"},desc:true}],
+    limit: 6
+  });
+
+  var geoStr = (geo.rows||[]).map(function(r){
+    return r.dimensionValues[0].value+":"+r.metricValues[0].value;
+  }).join("|");
+
+  var devStr = (dev.rows||[]).map(function(r){
+    return r.dimensionValues[0].value+":"+r.metricValues[0].value;
+  }).join("|");
+
+  var srcStr = (src.rows||[]).map(function(r){
+    return r.dimensionValues[0].value+":"+r.metricValues[0].value;
+  }).join("|");
+
+  sheet.appendRow([
+    d,
+    parseInt(m[0].value),
+    parseInt(m[1].value),
+    parseInt(m[2].value),
+    parseFloat(m[3].value).toFixed(3),
+    parseFloat(m[4].value).toFixed(1),
+    geoStr, devStr, srcStr
+  ]);
+  Logger.log("GA4 done: " + d);
+}
+
+// Run manually first to verify, then set a daily time-based trigger</pre>
+    </div>
+    <div style="margin-top:10px;font-size:10px;color:var(--muted);line-height:1.8">
+      <strong style="color:var(--yellow)">Enable in Apps Script:</strong> Services → Google Analytics Data API<br>
+      <strong style="color:var(--yellow)">New sheet tab needed:</strong> ga4_daily<br>
+      <strong style="color:var(--yellow)">Headers:</strong> date | sessions | users | new_users | bounce_rate | avg_duration | countries | devices | sources
+    </div>
+  </div>
+
+  <!-- Step 3: Monthly Summary -->
+  <div class="card mb">
+    <div class="ctitle">③ Monthly Summary — Google Sheets Formulas</div>
+    <div class="csub">CREATE A NEW TAB CALLED monthly_summary AND PASTE THESE FORMULAS IN ROW 2</div>
+    <div style="margin-top:4px;font-size:10px;color:var(--muted);line-height:1.8;margin-bottom:12px">
+      This tab auto-calculates monthly totals from your existing stripe_daily and ads_spend data. No script needed — pure formulas.
+    </div>
+    <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:16px;overflow-x:auto">
+<pre style="font-size:10px;line-height:1.75;color:rgba(252,224,94,0.82);white-space:pre-wrap">// ── Tab: monthly_summary ──────────────────────────────
+// Headers (paste in row 1):
+// month | gross_revenue | ad_spend | profit | bookings | avg_booking_value | roas | sessions
+
+// In row 2, col A — generates last 18 months automatically:
+=ARRAYFORMULA(TEXT(EOMONTH(TODAY(),-ROW(INDIRECT("A1:A18"))+1)+1,"YYYY-MM"))
+
+// In row 2, col B (gross_revenue):
+=IFERROR(SUMPRODUCT((TEXT(DATEVALUE(stripe_daily!A2:A),"YYYY-MM")=A2)*stripe_daily!B2:B),0)
+
+// In row 2, col C (ad_spend):
+=IFERROR(SUMPRODUCT((TEXT(DATEVALUE(ads_spend!A2:A),"YYYY-MM")=A2)*ads_spend!B2:B),0)
+
+// In row 2, col D (profit):
+=B2-C2
+
+// In row 2, col E (bookings):
+=IFERROR(SUMPRODUCT((TEXT(DATEVALUE(stripe_daily!A2:A),"YYYY-MM")=A2)*stripe_daily!D2:D),0)
+
+// In row 2, col F (avg booking value):
+=IFERROR(B2/E2,0)
+
+// In row 2, col G (roas):
+=IFERROR(IF(C2>0,B2/C2,0),0)
+
+// In row 2, col H (sessions — once GA4 is connected):
+=IFERROR(SUMPRODUCT((TEXT(DATEVALUE(ga4_daily!A2:A),"YYYY-MM")=A2)*ga4_daily!B2:B),0)
+
+// ── IMPORTANT ─────────────────────────────────────────
+// Drag rows 2 down through row 19 (covers 18 months).
+// Or use Dutch syntax (semicolons) if your Sheet is set to Dutch locale.
+// Dutch example for col B:
+// =ALS.FOUT(SOMPRODUCT((TEKST(DATUMWAARDE(stripe_daily!A2:A);"JJJJ-MM")=A2)*stripe_daily!B2:B);0)</pre>
+    </div>
+    <div style="margin-top:10px;font-size:10px;color:var(--muted);line-height:1.8">
+      <strong style="color:var(--yellow)">New sheet tab needed:</strong> monthly_summary<br>
+      <strong style="color:var(--yellow)">Headers:</strong> month | gross_revenue | ad_spend | profit | bookings | avg_booking_value | roas | sessions<br>
+      <strong style="color:var(--yellow)">After setup:</strong> Share the published CSV URL of this tab and I'll wire it into the dashboard.
+    </div>
+  </div>
+
+  <!-- Step 4: GIDs -->
+  <div class="card mb">
+    <div class="ctitle">④ Connect New Tabs to Dashboard</div>
+    <div class="csub">AFTER CREATING EACH TAB — SHARE THE PUBLISHED CSV URL</div>
+    <div style="margin-top:4px;font-size:10px;color:var(--muted);line-height:1.8">
+      For each new tab (ads_campaigns, ads_keywords, ga4_daily, monthly_summary):<br>
+      1. Go to <strong style="color:var(--yellow)">File → Share → Publish to web</strong><br>
+      2. Select the tab → CSV format → Publish<br>
+      3. Copy the URL and paste it into the <strong style="color:var(--yellow)">SOURCES</strong> config at the top of this dashboard's &lt;script&gt; block<br><br>
+      <strong style="color:var(--yellow)">Current GIDs already wired:</strong><br>
+      stripe_daily → gid=0<br>
+      ads_spend → gid=1460344028<br>
+      summary → gid=1722575914<br><br>
+      <strong style="color:var(--yellow)">Still needed:</strong> ads_campaigns GID, ads_keywords GID, ga4_daily GID, monthly_summary GID
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG — update GIDs as you add sheet tabs
+// ══════════════════════════════════════════════
+const BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRv4X1z2BuVBm2cutXCuXG7NCQ9AXYeiIXr3JYWMWojlLWnXYpNcdgPBscZGyDq5SbhxEYvECMZln7G/pub';
+const SRC = {
+  stripe:    `${BASE}?gid=0&single=true&output=csv`,
+  ads:       `${BASE}?gid=1460344028&single=true&output=csv`,
+  summary:   `${BASE}?gid=1722575914&single=true&output=csv`,
+  campaigns: `${BASE}?gid=1227071944&single=true&output=csv`,  // update after creating tabsingle=true&output=csv`,
+  keywords:  `${BASE}?gid=1036806991&single=true&output=csv`,   // update after creating tabsingle=true&output=csv`,
+  ga4:       `${BASE}?gid=1478321877&single=true&output=csv`,
+  monthly:   `${BASE}?gid=1609294714&single=true&output=csv`,
+  vehicles:  `${BASE}?gid=1702595254&single=true&output=csv`,
+};
+const PALETTE = ['#fce05e','#1fd680','#9b84f7','#ff5263','#4fc3f7','#ff9a3c','#f06292'];
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let RAW = {stripe:[],ads:[],summary:[],campaigns:[],keywords:[],ga4:[],monthly:[],vehicles:[]};
+let F   = {stripe:[],ads:[],summary:[],campaigns:[],keywords:[],ga4:[],monthly:[],vehicles:[]};
+let period = 'yesterday';
+let cFrom=null, cTo=null;
+const charts = {};
+
+Chart.defaults.color = 'rgba(255,255,255,0.42)';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 10;
+
+// ══════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════
+function parseCSV(txt) {
+  const lines = txt.trim().split('\n');
+  if (lines.length < 2) return [];
+  const heads = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase().replace(/\s+/g,'_'));
+  return lines.slice(1).filter(l=>l.trim()).map(line => {
+    const vals=[]; let cur='',inQ=false;
+    for(const c of line+','){
+      if(c==='"'){inQ=!inQ;continue}
+      if(c===','&&!inQ){vals.push(cur.trim());cur='';continue}
+      cur+=c;
+    }
+    const o={};heads.forEach((h,i)=>o[h]=vals[i]??'');return o;
+  });
+}
+const toD = s => { if(!s)return null; const d=new Date(s+'T00:00:00Z'); return isNaN(d)?null:d; };
+const fmtD = d => d ? new Date(d).toLocaleDateString('en-US',{day:'2-digit',month:'short',timeZone:'UTC'}) : '—';
+const fmtM = s => { if(!s)return '—'; const [y,m]=s.split('-'); return new Date(+y,+m-1,1).toLocaleDateString('en-US',{month:'short',year:'numeric'}); };
+const $   = (v,d=2) => { const n=parseFloat(v); return isNaN(n)?'—':'$'+n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); };
+const N   = v => { const n=parseFloat(v); return isNaN(n)?'—':n.toLocaleString('en-US',{maximumFractionDigits:1}); };
+const P   = (v,d=1) => { const n=parseFloat(v); return isNaN(n)?'—':n.toFixed(d)+'%'; };
+const SUM = (arr,k) => arr.reduce((s,r)=>s+(parseFloat(r[k])||0),0);
+const AVG = (arr,k) => arr.length ? SUM(arr,k)/arr.length : 0;
+const clamp = (v,lo,hi) => Math.min(hi,Math.max(lo,v));
+
+function pill(roas){ return `<span class="pill ${roas>=2?'g':roas>=1?'y':'r'}">${parseFloat(roas).toFixed(2)}x</span>`; }
+
+// ══════════════════════════════════════════════
+// DATE FILTER
+// ══════════════════════════════════════════════
+function getRange() {
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()));
+  const yest  = new Date(today); yest.setUTCDate(yest.getUTCDate()-1);
+  const mk = d => { const x=new Date(today); x.setUTCDate(x.getUTCDate()-d); return x; };
+  const map = { today:{from:today,to:today}, yesterday:{from:yest,to:yest},
+    '7d':{from:mk(6),to:today}, '14d':{from:mk(13),to:today},
+    '30d':{from:mk(29),to:today}, 'all':{from:new Date('2000-01-01'),to:today} };
+  if (period==='custom'&&cFrom&&cTo) return {from:cFrom,to:cTo};
+  return map[period]||map.yesterday;
+}
+function byDate(arr,k='date'){
+  const {from,to}=getRange();
+  return arr.filter(r=>{ const d=toD(r[k]); return d&&d>=from&&d<=to; });
+}
+function applyFilters(){
+  F.stripe    = byDate(RAW.stripe);
+  F.ads       = byDate(RAW.ads);
+  F.summary   = byDate(RAW.summary);
+  F.campaigns = byDate(RAW.campaigns);
+  F.keywords  = byDate(RAW.keywords);
+  F.ga4       = byDate(RAW.ga4);
+  F.monthly   = RAW.monthly;
+  F.vehicles  = byDate(RAW.vehicles);
+  const {from,to}=getRange();
+  document.getElementById('dinfo').textContent =
+    from.getTime()===to.getTime() ? fmtD(from) : fmtD(from)+' → '+fmtD(to);
+  renderAll();
+}
+function setPeriod(p,btn){
+  period=p;
+  document.querySelectorAll('.pb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+function applyCustom(){
+  const f=document.getElementById('df').value, t=document.getElementById('dt').value;
+  if(!f||!t) return;
+  cFrom=toD(f); cTo=toD(t); period='custom';
+  document.querySelectorAll('.pb').forEach(b=>b.classList.remove('active'));
+  applyFilters();
+}
+
+// ══════════════════════════════════════════════
+// CHART HELPERS
+// ══════════════════════════════════════════════
+function destroyC(id){ if(charts[id]){charts[id].destroy();delete charts[id];} }
+function noData(id){
+  destroyC(id);
+  const c=document.getElementById(id); if(!c)return;
+  const p=c.parentElement;
+  p.innerHTML=`<div class="empty"><div class="ei">📭</div><div class="et">No data for this period</div></div>`;
+}
+function lineC(id,labels,datasets,yFmt=v=>'$'+v,extra={}){
+  destroyC(id);
+  const ctx=document.getElementById(id); if(!ctx)return;
+  charts[id]=new Chart(ctx,{type:'line',data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:false,animation:{duration:500},
+    plugins:{legend:{display:datasets.length>1,labels:{boxWidth:9,padding:12}}},
+    scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{maxRotation:0,maxTicksLimit:8}},
+            y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{callback:yFmt}}},
+    ...extra
+  }});
+}
+function barC(id,labels,datasets,yFmt=v=>v,extra={}){
+  destroyC(id);
+  const ctx=document.getElementById(id); if(!ctx)return;
+  charts[id]=new Chart(ctx,{type:'bar',data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:false,animation:{duration:500},
+    plugins:{legend:{display:datasets.length>1,labels:{boxWidth:9,padding:12}}},
+    scales:{x:{grid:{color:'rgba(255,255,255,0.04)'}},
+            y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{callback:yFmt}}},
+    ...extra
+  }});
+}
+function donutC(id,labels,data,colors){
+  destroyC(id);
+  const ctx=document.getElementById(id); if(!ctx)return;
+  charts[id]=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:3}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',animation:{duration:600},
+    plugins:{legend:{display:true,position:'right',labels:{boxWidth:9,padding:10}}}}});
+}
+function ds(label,data,color,fill=true){
+  return {label,data,borderColor:color,backgroundColor:fill?color.replace(')',',0.09)').replace('rgb','rgba'):undefined,
+    fill,tension:0.4,pointRadius:3,pointBackgroundColor:color,borderWidth:2};
+}
+
+// ══════════════════════════════════════════════
+// RENDER COMMAND
+// ══════════════════════════════════════════════
+function renderCmd(){
+  const S=F.summary;
+  const kpis=document.getElementById('cmd-kpis');
+  if(!S.length){ kpis.innerHTML=`<div class="empty" style="grid-column:1/-1;height:70px"><div class="ei">📭</div><div class="et">No data for this period</div></div>`; return; }
+
+  const gross=SUM(S,'gross_revenue'), spend=SUM(S,'ad_spend'), profit=SUM(S,'profit');
+  const books=SUM(S,'bookings'), aov=AVG(S,'avg_booking_value');
+  const roasArr=S.map(r=>parseFloat(r.roas)||0).filter(v=>v>0);
+  const avgRoas=roasArr.length?roasArr.reduce((a,v)=>a+v,0)/roasArr.length:0;
+  const margin=gross>0?(profit/gross*100):0;
+
+  kpis.innerHTML=`
+    <div class="kpi hi">
+      <div class="kico">💰</div><div class="klbl">Profit (USD)</div>
+      <div class="kval">${$(profit,0)}</div>
+      <div class="ksub ${profit>=0?'up':'dn'}">${profit>=0?'↑':'↓'} ${margin.toFixed(1)}% margin</div>
+      <div class="mtr">
+        <div class="mtr-lbls"><span>Spend ${$(spend,0)}</span><span>Revenue ${$(gross,0)}</span></div>
+        <div class="mtr-t"><div class="mtr-f" style="width:${clamp(margin,0,100)}%"></div></div>
+      </div>
+    </div>
+    <div class="kpi"><div class="kico">💳</div><div class="klbl">Gross Revenue</div><div class="kval">${$(gross,0)}</div><div class="ksub nt">${S.length} day${S.length>1?'s':''}</div></div>
+    <div class="kpi"><div class="kico">📣</div><div class="klbl">Ad Spend</div><div class="kval">${$(spend,0)}</div><div class="ksub nt">Google Ads</div></div>
+    <div class="kpi"><div class="kico">📊</div><div class="klbl">Avg. ROAS</div><div class="kval">${avgRoas.toFixed(2)}x</div><div class="ksub ${avgRoas>=2?'up':avgRoas>=1?'nt':'dn'}">${avgRoas>=2?'✓ Profitable':avgRoas>=1?'~ Break-even':'✗ Loss'}</div></div>
+    <div class="kpi"><div class="kico">🎫</div><div class="klbl">Bookings</div><div class="kval">${books||'—'}</div><div class="ksub nt">Reservations</div></div>
+    <div class="kpi"><div class="kico">🎯</div><div class="klbl">Avg. Booking</div><div class="kval">${$(aov,0)}</div><div class="ksub nt">Per reservation</div></div>
+  `;
+
+  const lbl=S.map(r=>fmtD(r.date));
+  const rev=S.map(r=>parseFloat(r.gross_revenue)||0);
+  const spd=S.map(r=>parseFloat(r.ad_spend)||0);
+  const prf=S.map(r=>parseFloat(r.profit)||0);
+
+  lineC('c-rv-sp',lbl,[ds('Revenue',rev,'#fce05e'),ds('Ad Spend',spd,'#ff5263')]);
+  barC('c-profit',lbl,[{label:'Profit',data:prf,backgroundColor:prf.map(p=>p>=0?'rgba(31,214,128,0.72)':'rgba(255,82,99,0.72)'),borderRadius:4}],v=>'$'+v);
+
+  document.getElementById('cmd-tbl').innerHTML=[...S].reverse().map(r=>{
+    const p=parseFloat(r.profit)||0,g=parseFloat(r.gross_revenue)||0,rv=parseFloat(r.roas)||0;
+    const mg=g>0?(p/g*100):0;
+    return `<tr><td>${fmtD(r.date)}</td><td>${$(r.gross_revenue)}</td><td>${$(r.ad_spend)}</td>
+      <td style="color:${p>=0?'var(--green)':'var(--red)'}">${$(r.profit)}</td>
+      <td>${mg.toFixed(1)}%</td><td>${r.bookings||'—'}</td><td>${$(r.avg_booking_value)}</td>
+      <td>${pill(rv)}</td></tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// RENDER REVENUE
+// ══════════════════════════════════════════════
+function renderRev(){
+  const S=F.stripe;
+  const kpis=document.getElementById('rev-kpis');
+  if(!S.length){ kpis.innerHTML=`<div class="empty" style="grid-column:1/-1;height:60px"><div class="ei">📭</div><div class="et">No Stripe data</div></div>`;
+    ['c-gross','c-net','c-bkgs','c-aov'].forEach(noData); return; }
+
+  const gross=SUM(S,'gross_revenue'),net=SUM(S,'net_revenue'),books=SUM(S,'bookings_count'),ref=SUM(S,'refunds');
+  kpis.innerHTML=`
+    <div class="kpi hi"><div class="kico">💰</div><div class="klbl">Total Gross</div><div class="kval">${$(gross,0)}</div><div class="ksub nt">${S.length} days</div></div>
+    <div class="kpi"><div class="kico">💵</div><div class="klbl">Total Net</div><div class="kval">${$(net,0)}</div><div class="ksub nt">After Stripe fees</div></div>
+    <div class="kpi"><div class="kico">📅</div><div class="klbl">Daily Avg.</div><div class="kval">${$(gross/S.length,0)}</div><div class="ksub nt">Gross per day</div></div>
+    <div class="kpi"><div class="kico">🎫</div><div class="klbl">Bookings</div><div class="kval">${N(books)}</div><div class="ksub up">All reservations</div></div>
+    <div class="kpi"><div class="kico">↩️</div><div class="klbl">Refunds</div><div class="kval">${$(ref,0)}</div><div class="ksub ${ref===0?'up':'dn'}">${ref===0?'✓ None':'⚠ Check'}</div></div>
+  `;
+  const lbl=S.map(r=>fmtD(r.date));
+  lineC('c-gross',lbl,[ds('Gross',S.map(r=>parseFloat(r.gross_revenue)||0),'#fce05e')]);
+  lineC('c-net',  lbl,[ds('Net',  S.map(r=>parseFloat(r.net_revenue)||0), '#1fd680')]);
+  barC('c-bkgs',  lbl,[{label:'Bookings',data:S.map(r=>parseInt(r.bookings_count)||0),backgroundColor:'rgba(252,224,94,0.62)',borderRadius:4}],v=>v);
+  lineC('c-aov',  lbl,[ds('AOV',  S.map(r=>parseFloat(r.avg_booking_value)||0),'#9b84f7')]);
+
+  document.getElementById('rev-tbl').innerHTML=[...S].reverse().map(r=>{
+    const g=parseFloat(r.gross_revenue)||0,n=parseFloat(r.net_revenue)||0;
+    return `<tr><td>${fmtD(r.date)}</td><td>${$(r.gross_revenue)}</td><td>${$(r.net_revenue)}</td>
+      <td>${r.bookings_count||'—'}</td><td>${$(r.avg_booking_value)}</td>
+      <td style="color:${parseFloat(r.refunds)>0?'var(--red)':'var(--muted)'}">${$(r.refunds)}</td>
+      <td style="color:var(--muted)">${$(g-n)}</td></tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// RENDER ADS
+// ══════════════════════════════════════════════
+function renderAds(){
+  const A=F.ads, SUM_D=F.summary;
+  const kpis=document.getElementById('ads-kpis');
+  const dK=A[0]?.date!==undefined?'date':'a', sK=A[0]?.spend_usd!==undefined?'spend_usd':'b',
+        cK=A[0]?.clicks!==undefined?'clicks':'c', iK=A[0]?.impressions!==undefined?'impressions':'d',
+        vK=A[0]?.conversions!==undefined?'conversions':'e';
+  if(!A.length){ kpis.innerHTML=`<div class="empty" style="grid-column:1/-1;height:60px"><div class="ei">📭</div><div class="et">No Ads data</div></div>`;
+    ['c-spend','c-roas','c-clicks','c-ctr','c-cpc'].forEach(noData); return; }
+
+  const totSpend=SUM(A,sK), totClicks=A.reduce((s,r)=>s+(parseInt(r[cK])||0),0);
+  const totImps=A.reduce((s,r)=>s+(parseInt(r[iK])||0),0), totConv=SUM(A,vK);
+  const avgCTR=totImps>0?(totClicks/totImps*100):0, avgCPC=totClicks>0?(totSpend/totClicks):0;
+  const roasV=SUM_D.map(r=>parseFloat(r.roas)||0).filter(v=>v>0);
+  const avgRoas=roasV.length?roasV.reduce((a,v)=>a+v,0)/roasV.length:0;
+
+  kpis.innerHTML=`
+    <div class="kpi hi"><div class="kico">📣</div><div class="klbl">Total Spend</div><div class="kval">${$(totSpend,0)}</div><div class="ksub nt">Google Ads</div></div>
+    <div class="kpi"><div class="kico">👆</div><div class="klbl">Total Clicks</div><div class="kval">${N(totClicks)}</div><div class="ksub nt">CTR: ${P(avgCTR,2)}</div></div>
+    <div class="kpi"><div class="kico">💵</div><div class="klbl">Avg. CPC</div><div class="kval">${$(avgCPC)}</div><div class="ksub nt">Cost per click</div></div>
+    <div class="kpi"><div class="kico">👁️</div><div class="klbl">Impressions</div><div class="kval">${N(totImps)}</div><div class="ksub nt">Total views</div></div>
+    <div class="kpi"><div class="kico">📊</div><div class="klbl">Avg. ROAS</div><div class="kval">${avgRoas.toFixed(2)}x</div><div class="ksub ${avgRoas>=2?'up':avgRoas>=1?'nt':'dn'}">${avgRoas>=2?'✓ Profitable':avgRoas>=1?'~ Break-even':'✗ Loss'}</div></div>
+    <div class="kpi"><div class="kico">🎯</div><div class="klbl">Conversions</div><div class="kval">${totConv.toFixed(0)}</div><div class="ksub nt">⚠ Delayed</div></div>
+  `;
+  const lbl=A.map(r=>fmtD(r[dK]));
+  const spd=A.map(r=>parseFloat(r[sK])||0), clk=A.map(r=>parseInt(r[cK])||0);
+  const imp=A.map(r=>parseInt(r[iK])||0);
+  const ctr=A.map((_,i)=>imp[i]>0?(clk[i]/imp[i]*100):0);
+  const cpc=A.map((_,i)=>clk[i]>0?(spd[i]/clk[i]):0);
+  const rv=A.map(r=>{ const m=SUM_D.find(s=>s.date===r[dK]); return m?parseFloat(m.roas)||0:0; });
+
+  lineC('c-spend',lbl,[ds('Spend',spd,'#ff5263')]);
+  lineC('c-roas', lbl,[ds('ROAS',rv,'#fce05e')],v=>v+'x');
+  barC('c-clicks',lbl,[{label:'Clicks',data:clk,backgroundColor:'rgba(252,224,94,0.6)',borderRadius:3}],v=>v);
+  lineC('c-ctr',  lbl,[ds('CTR %',ctr,'#9b84f7')],v=>v.toFixed(1)+'%');
+  lineC('c-cpc',  lbl,[ds('CPC',cpc,'#1fd680')]);
+
+  document.getElementById('ads-tbl').innerHTML=[...A].reverse().map(r=>{
+    const sp=parseFloat(r[sK])||0,cl=parseInt(r[cK])||0,im=parseInt(r[iK])||0,cv=parseFloat(r[vK])||0;
+    const m=SUM_D.find(s=>s.date===r[dK]); const rv=m?parseFloat(m.roas)||0:0;
+    return `<tr><td>${fmtD(r[dK])}</td><td>${$(sp)}</td><td>${N(cl)}</td><td>${N(im)}</td>
+      <td>${im>0?P(cl/im*100,2):'—'}</td><td>${cl>0?$(sp/cl):'—'}</td>
+      <td>${cv.toFixed(0)} <span style="font-size:9px;color:var(--muted)">⚠</span></td>
+      <td>${pill(rv)}</td></tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// RENDER CAMPAIGNS
+// ══════════════════════════════════════════════
+function renderCampaigns(){
+  const C=F.campaigns, K=F.keywords, SUM_D=F.summary;
+  const conn=document.getElementById('camp-connected');
+  const notConn=document.getElementById('camp-not-connected');
+  if(!C.length){ conn.style.display='none'; notConn.style.display='block'; return; }
+  conn.style.display='block'; notConn.style.display='none';
+
+  // Aggregate by campaign
+  const campMap={};
+  C.forEach(r=>{
+    const n=r.campaign||r.name||'Unknown';
+    if(!campMap[n]) campMap[n]={spend:0,clicks:0,imps:0,conv:0,days:0};
+    campMap[n].spend+=parseFloat(r.spend_usd)||0;
+    campMap[n].clicks+=parseInt(r.clicks)||0;
+    campMap[n].imps+=parseInt(r.impressions)||0;
+    campMap[n].conv+=parseFloat(r.conversions)||0;
+    campMap[n].days++;
+    campMap[n].status=r.status||'ENABLED';
+  });
+  const camps=Object.entries(campMap).sort((a,b)=>b[1].spend-a[1].spend);
+  const totSpend=camps.reduce((s,[,v])=>s+v.spend,0);
+
+  document.getElementById('camp-kpis').innerHTML=`
+    <div class="kpi hi"><div class="kico">🎯</div><div class="klbl">Campaigns</div><div class="kval">${camps.length}</div><div class="ksub nt">Active</div></div>
+    <div class="kpi"><div class="kico">💵</div><div class="klbl">Total Spend</div><div class="kval">${$(totSpend,0)}</div><div class="ksub nt">All campaigns</div></div>
+    <div class="kpi"><div class="kico">🔑</div><div class="klbl">Keywords</div><div class="kval">${K.length?[...new Set(K.map(r=>r.keyword))].length:'—'}</div><div class="ksub nt">Unique</div></div>
+  `;
+
+  const cLabels=camps.map(([n])=>n.length>18?n.slice(0,18)+'…':n);
+  const cSpend=camps.map(([,v])=>v.spend);
+  barC('c-camp-spend',cLabels,[{label:'Spend (USD)',data:cSpend,backgroundColor:PALETTE.map(c=>c+'b0'),borderRadius:4}],v=>'$'+v);
+
+  const roasData=camps.map(([n,v])=>{
+    const totalRev=SUM_D.reduce((s,r)=>s+(parseFloat(r.gross_revenue)||0),0);
+    return v.spend>0?(totalRev/camps.reduce((s,[,x])=>s+x.spend,0)*v.spend/v.spend*
+      (totalRev/camps.reduce((s,[,x])=>s+x.spend,0))):0;
+  });
+  barC('c-camp-roas',cLabels,[{label:'ROAS',data:camps.map(([,v])=>v.spend>0?SUM(SUM_D,'gross_revenue')/totSpend:0),backgroundColor:'rgba(252,224,94,0.65)',borderRadius:4}],v=>v.toFixed(1)+'x');
+
+  document.getElementById('camp-tbl').innerHTML=camps.map(([name,v],i)=>{
+    const ctr=v.imps>0?(v.clicks/v.imps*100):0;
+    const cpc=v.clicks>0?(v.spend/v.clicks):0;
+    const st=v.status==='ENABLED'?'<span class="pill g">ACTIVE</span>':'<span class="pill r">PAUSED</span>';
+    return `<tr><td style="color:${PALETTE[i%PALETTE.length]}">${name}</td><td>${$(v.spend)}</td>
+      <td>${N(v.clicks)}</td><td>${N(v.imps)}</td><td>${P(ctr,2)}</td>
+      <td>${$(cpc)}</td><td>${v.conv.toFixed(0)}</td><td>${st}</td></tr>`;
+  }).join('');
+
+  // Keywords table
+  if(K.length){
+    const kwMap={};
+    K.forEach(r=>{
+      const key=r.keyword+'|'+r.match_type;
+      if(!kwMap[key]) kwMap[key]={keyword:r.keyword,match:r.match_type,campaign:r.campaign,spend:0,clicks:0,conv:0,qs:r.quality_score};
+      kwMap[key].spend+=parseFloat(r.spend_usd)||0;
+      kwMap[key].clicks+=parseInt(r.clicks)||0;
+      kwMap[key].conv+=parseFloat(r.conversions)||0;
+    });
+    const kwArr=Object.values(kwMap).sort((a,b)=>b.spend-a.spend).slice(0,30);
+    document.getElementById('kw-tbl').innerHTML=kwArr.map(k=>{
+      const matchColor={EXACT:'g',PHRASE:'y',BROAD:'p'}[k.match]||'b';
+      return `<tr><td style="color:#fff">${k.keyword}</td>
+        <td><span class="pill ${matchColor}">${k.match}</span></td>
+        <td style="color:var(--muted);font-size:10px">${(k.campaign||'').length>20?(k.campaign||'').slice(0,20)+'…':k.campaign||'—'}</td>
+        <td>${$(k.spend)}</td><td>${N(k.clicks)}</td>
+        <td>${k.clicks>0?$(k.spend/k.clicks):'—'}</td>
+        <td>${k.conv.toFixed(0)}</td>
+        <td>${k.qs&&k.qs!=='—'?`<span class="pill ${k.qs>=7?'g':k.qs>=5?'y':'r'}">${k.qs}/10</span>`:'—'}</td></tr>`;
+    }).join('');
+  }
+}
+
+// ══════════════════════════════════════════════
+// RENDER GA4
+// ══════════════════════════════════════════════
+function renderGA4(){
+  const G=F.ga4;
+  const conn=document.getElementById('ga4-connected'), notConn=document.getElementById('ga4-not-connected');
+  if(!G.length){ conn.style.display='none'; notConn.style.display='block'; return; }
+  conn.style.display='block'; notConn.style.display='none';
+
+  const totS=G.reduce((s,r)=>s+(parseInt(r.sessions)||0),0);
+  const totU=G.reduce((s,r)=>s+(parseInt(r.users)||0),0);
+  const totN=G.reduce((s,r)=>s+(parseInt(r.new_users)||0),0);
+  const avgB=AVG(G,'bounce_rate');
+  const avgD=AVG(G,'avg_duration');
+
+  document.getElementById('ga4-kpis').innerHTML=`
+    <div class="kpi hi"><div class="kico">👁️</div><div class="klbl">Sessions</div><div class="kval">${N(totS)}</div><div class="ksub nt">${G.length} days</div></div>
+    <div class="kpi"><div class="kico">👤</div><div class="klbl">Active Users</div><div class="kval">${N(totU)}</div><div class="ksub nt">Unique visitors</div></div>
+    <div class="kpi"><div class="kico">🆕</div><div class="klbl">New Users</div><div class="kval">${N(totN)}</div><div class="ksub nt">${totU>0?((totN/totU)*100).toFixed(0)+'%':''} of total</div></div>
+    <div class="kpi"><div class="kico">↩️</div><div class="klbl">Bounce Rate</div><div class="kval">${avgB.toFixed(1)}%</div><div class="ksub ${avgB<50?'up':avgB<70?'nt':'dn'}">${avgB<50?'✓ Good':avgB<70?'~ Average':'⚠ High'}</div></div>
+    <div class="kpi"><div class="kico">⏱️</div><div class="klbl">Avg. Session</div><div class="kval">${Math.floor(avgD/60)}m ${Math.round(avgD%60)}s</div><div class="ksub nt">Duration</div></div>
+  `;
+  const lbl=G.map(r=>fmtD(r.date));
+  lineC('c-sess',lbl,[ds('Sessions',G.map(r=>parseInt(r.sessions)||0),'#fce05e'),ds('Users',G.map(r=>parseInt(r.users)||0),'#1fd680')],v=>v);
+  lineC('c-bounce',lbl,[ds('Bounce %',G.map(r=>(parseFloat(r.bounce_rate)||0)),'#9b84f7')],v=>v.toFixed(0)+'%');
+
+  const aggMap=(key)=>{
+    const m={};
+    G.forEach(r=>{ if(!r[key])return; r[key].split('|').forEach(p=>{const[n,v]=p.split(':');if(n)m[n]=(m[n]||0)+(parseInt(v)||0);}); });
+    return m;
+  };
+  const cm=aggMap('countries'), dm=aggMap('devices'), sm=aggMap('sources');
+
+  const topC=Object.entries(cm).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxC=topC[0]?.[1]||1;
+  document.getElementById('ga4-countries').innerHTML=topC.map(([n,v],i)=>`
+    <div class="brow"><div class="blbl">${n}</div>
+    <div class="btrack"><div class="bfill" style="width:${(v/maxC*100).toFixed(0)}%;background:${PALETTE[i]}"></div></div>
+    <div class="bpct">${v.toLocaleString()}</div></div>`).join('');
+
+  const devE=Object.entries(dm), devT=devE.reduce((s,[,v])=>s+v,0);
+  document.getElementById('dev-total').textContent=devT.toLocaleString();
+  donutC('c-devices',devE.map(e=>e[0]),devE.map(e=>e[1]),PALETTE);
+
+  const topS=Object.entries(sm).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxS=topS[0]?.[1]||1;
+  document.getElementById('ga4-sources').innerHTML=topS.map(([n,v],i)=>`
+    <div class="brow"><div class="blbl">${n.replace(/_/g,' ')}</div>
+    <div class="btrack"><div class="bfill" style="width:${(v/maxS*100).toFixed(0)}%;background:${PALETTE[i]}"></div></div>
+    <div class="bpct">${v.toLocaleString()}</div></div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// RENDER GROWTH
+// ══════════════════════════════════════════════
+function renderGrowth(){
+  const M=F.monthly;
+  const conn=document.getElementById('growth-connected'), notConn=document.getElementById('growth-not-connected');
+  if(!M.length){ conn.style.display='none'; notConn.style.display='block'; return; }
+  conn.style.display='block'; notConn.style.display='none';
+
+  const last=M[M.length-1]||{}, prev=M[M.length-2]||{};
+  const delta=(curr,prevV)=>{ const c=parseFloat(curr)||0,p=parseFloat(prevV)||0; if(!p)return''; const d=((c-p)/p*100); return `<span class="delta ${d>=0?'pos':'neg'}">${d>=0?'↑':'↓'}${Math.abs(d).toFixed(1)}%</span>`; };
+
+  document.getElementById('growth-kpis').innerHTML=`
+    <div class="kpi hi"><div class="kico">📈</div><div class="klbl">This Month Rev.</div><div class="kval">${$(last.gross_revenue,0)}</div><div class="ksub">${delta(last.gross_revenue,prev.gross_revenue)||'—'}</div></div>
+    <div class="kpi"><div class="kico">🎫</div><div class="klbl">This Month Bookings</div><div class="kval">${N(last.bookings)}</div><div class="ksub">${delta(last.bookings,prev.bookings)||'—'}</div></div>
+    <div class="kpi"><div class="kico">📊</div><div class="klbl">This Month ROAS</div><div class="kval">${(parseFloat(last.roas)||0).toFixed(2)}x</div><div class="ksub">${delta(last.roas,prev.roas)||'—'}</div></div>
+    <div class="kpi"><div class="kico">💰</div><div class="klbl">This Month Profit</div><div class="kval">${$(last.profit,0)}</div><div class="ksub">${delta(last.profit,prev.profit)||'—'}</div></div>
+  `;
+
+  const lbl=M.map(r=>fmtM(r.month));
+  barC('c-mrev', lbl,[{label:'Gross Revenue',data:M.map(r=>parseFloat(r.gross_revenue)||0),backgroundColor:'rgba(252,224,94,0.68)',borderRadius:4}],v=>'$'+v);
+  barC('c-mbk',  lbl,[{label:'Bookings',data:M.map(r=>parseInt(r.bookings)||0),backgroundColor:'rgba(31,214,128,0.6)',borderRadius:4}],v=>v);
+  lineC('c-mroas',  lbl,[ds('ROAS',M.map(r=>parseFloat(r.roas)||0),'#fce05e')],v=>v.toFixed(1)+'x');
+  barC('c-mprofit', lbl,[{label:'Profit',data:M.map(r=>parseFloat(r.profit)||0),backgroundColor:M.map(r=>parseFloat(r.profit)>=0?'rgba(31,214,128,0.65)':'rgba(255,82,99,0.65)'),borderRadius:4}],v=>'$'+v);
+
+  document.getElementById('growth-tbl').innerHTML=[...M].reverse().map((r,i,arr)=>{
+    const nxt=arr[i+1];
+    const d=(curr,p)=>{ if(!p||!parseFloat(p))return''; const pct=((parseFloat(curr)-parseFloat(p))/parseFloat(p)*100); return `<span class="delta ${pct>=0?'pos':'neg'}">${pct>=0?'↑':'↓'}${Math.abs(pct).toFixed(1)}%</span>`; };
+    const g=parseFloat(r.gross_revenue)||0, p=parseFloat(r.profit)||0;
+    return `<tr>
+      <td class="hi">${fmtM(r.month)}</td>
+      <td>${$(r.gross_revenue)}</td>
+      <td>${nxt?d(r.gross_revenue,nxt.gross_revenue):'—'}</td>
+      <td>${$(r.ad_spend)}</td>
+      <td style="color:${p>=0?'var(--green)':'var(--red)'}">${$(r.profit)}</td>
+      <td>${g>0?((p/g)*100).toFixed(1)+'%':'—'}</td>
+      <td>${N(r.bookings)}</td>
+      <td>${pill(r.roas)}</td></tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════════════
+function renderVehicles(){
+  const V=F.vehicles;
+  const sec=document.getElementById('vehicles-section');
+  const tblSec=document.getElementById('vehicles-table-section');
+  if(!V.length){ if(sec)sec.style.display='none'; if(tblSec)tblSec.style.display='none'; return; }
+  if(sec)sec.style.display='';
+  if(tblSec)tblSec.style.display='';
+
+  // Aggregate by vehicle
+  const vMap={};
+  V.forEach(r=>{
+    const n=r.vehicle||r.item_name||r.itemname||Object.values(r)[1]||'Unknown';
+    if(!vMap[n]) vMap[n]={bookings:0,revenue:0};
+    vMap[n].bookings+=(parseInt(r.bookings)||parseInt(r.itemspurchased)||0);
+    vMap[n].revenue+=(parseFloat(r.revenue_usd)||parseFloat(r.itemrevenue)||0);
+  });
+  const sorted=Object.entries(vMap).sort((a,b)=>b[1].bookings-a[1].bookings);
+  const maxB=sorted[0]?.[1].bookings||1;
+  const totB=sorted.reduce((s,[,v])=>s+v.bookings,0);
+  const totR=sorted.reduce((s,[,v])=>s+v.revenue,0);
+
+  // Bar list
+  document.getElementById('veh-bars').innerHTML=sorted.slice(0,8).map(([n,v],i)=>`
+    <div class="brow">
+      <div class="blbl" title="${n}">${n.length>16?n.slice(0,16)+'…':n}</div>
+      <div class="btrack"><div class="bfill" style="width:${(v.bookings/maxB*100).toFixed(0)}%;background:${PALETTE[i%PALETTE.length]}"></div></div>
+      <div class="bpct">${v.bookings}</div>
+    </div>`).join('');
+
+  // Revenue chart
+  const top8=sorted.slice(0,8);
+  destroyC('c-veh-rev');
+  const ctx=document.getElementById('c-veh-rev');
+  if(ctx){
+    charts['c-veh-rev']=new Chart(ctx,{type:'bar',
+      data:{labels:top8.map(([n])=>n.length>12?n.slice(0,12)+'…':n),
+        datasets:[{label:'Revenue USD',data:top8.map(([,v])=>v.revenue.toFixed(2)),
+          backgroundColor:PALETTE.map(c=>c+'b0'),borderRadius:5}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:500},
+        plugins:{legend:{display:false}},
+        scales:{x:{grid:{color:'rgba(255,255,255,0.04)'}},
+                y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{callback:v=>'$'+v}}}}});
+  }
+
+  // Table
+  document.getElementById('veh-tbl').innerHTML=sorted.map(([n,v],i)=>{
+    const avg=v.bookings>0?(v.revenue/v.bookings):0;
+    const share=totB>0?((v.bookings/totB)*100).toFixed(1):0;
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td style="color:${PALETTE[i%PALETTE.length]};font-weight:600">${n}</td>
+      <td>${v.bookings}</td>
+      <td>$${v.revenue.toFixed(2)}</td>
+      <td>$${avg.toFixed(2)}</td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <div style="width:60px;height:3px;background:var(--faint);border-radius:2px">
+          <div style="width:${share}%;height:100%;background:${PALETTE[i%PALETTE.length]};border-radius:2px"></div>
+        </div>${share}%
+      </div></td></tr>`;
+  }).join('');
+}
+
+function renderAll(){ renderCmd(); renderRev(); renderAds(); renderCampaigns(); renderGA4(); renderVehicles(); renderGrowth(); initSortableTables(); }
+
+// ── Sortable Tables ──────────────────────────────────────────
+function initSortableTables(){
+  document.querySelectorAll('.tbl').forEach(function(tbl){
+    var ths = tbl.querySelectorAll('thead th');
+    ths.forEach(function(th, colIdx){
+      th.addEventListener('click', function(){
+        var isDesc = th.classList.contains('sort-desc');
+        // Reset all headers in this table
+        ths.forEach(function(h){ h.classList.remove('sort-asc','sort-desc'); });
+        th.classList.add(isDesc ? 'sort-asc' : 'sort-desc');
+        sortTable(tbl, colIdx, !isDesc);
+      });
+    });
+  });
+}
+
+function sortTable(tbl, colIdx, desc){
+  var tbody = tbl.querySelector('tbody');
+  if(!tbody) return;
+  var rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.sort(function(a, b){
+    var aCell = a.cells[colIdx];
+    var bCell = b.cells[colIdx];
+    if(!aCell || !bCell) return 0;
+    var aVal = aCell.textContent.trim().replace(/[$,%x]/g,'').replace(/,/g,'');
+    var bVal = bCell.textContent.trim().replace(/[$,%x]/g,'').replace(/,/g,'');
+    var aNum = parseFloat(aVal);
+    var bNum = parseFloat(bVal);
+    if(!isNaN(aNum) && !isNaN(bNum)){
+      return desc ? bNum - aNum : aNum - bNum;
+    }
+    return desc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+  });
+  rows.forEach(function(r){ tbody.appendChild(r); });
+}
+
+// ══════════════════════════════════════════════
+// LOAD DATA
+// ══════════════════════════════════════════════
+async function fetchCSV(url){
+  const r=await fetch(url,{cache:'no-store'});
+  if(!r.ok) throw new Error(`HTTP ${r.status}`);
+  return parseCSV(await r.text());
+}
+
+async function loadAll(manual=false){
+  const btn=document.getElementById('refreshBtn');
+  if(manual){
+    document.getElementById('syncTxt').textContent='Refreshing…';
+    if(btn){ btn.style.animation='spin 0.8s linear infinite'; btn.disabled=true; }
+  }
+  try {
+    // Add cache-busting timestamp to force fresh data from Google Sheets
+    const bust='&t='+Date.now();
+    const fetchFresh=url=>fetchCSV(url+(url.includes('?')?'&':'?')+'cache='+Date.now());
+
+    const [stripe,ads,summary]=await Promise.all([fetchFresh(SRC.stripe),fetchFresh(SRC.ads),fetchFresh(SRC.summary)]);
+    RAW.stripe=stripe; RAW.ads=ads; RAW.summary=summary;
+
+    const tryFetch=async k=>{ try{ if(SRC[k]&&!SRC[k].includes('_GID')) RAW[k]=await fetchFresh(SRC[k]); }catch(e){} };
+    await Promise.all(['campaigns','keywords','ga4','monthly','vehicles'].map(tryFetch));
+
+    const now=new Date();
+    document.getElementById('syncTxt').textContent='Updated '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    applyFilters();
+  } catch(e){
+    console.error(e);
+    document.getElementById('syncTxt').textContent='⚠ Load error';
+  } finally {
+    if(btn){ btn.style.animation=''; btn.disabled=false; }
+  }
+}
+
+// ══════════════════════════════════════════════
+// TAB NAVIGATION
+// ══════════════════════════════════════════════
+function showTab(name,el){
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+const _now=new Date();
+const _today=new Date(Date.UTC(_now.getUTCFullYear(),_now.getUTCMonth(),_now.getUTCDate()));
+const _yest=new Date(Date.UTC(_now.getUTCFullYear(),_now.getUTCMonth(),_now.getUTCDate()-1));
+// Default to Yesterday (scripts run at 07:00 for yesterday's data)
+document.getElementById('df').value=_yest.toISOString().split('T')[0];
+document.getElementById('dt').value=_yest.toISOString().split('T')[0];
+loadAll();
+setInterval(loadAll,5*60*1000);
+</script>
+</body>
+</html>
